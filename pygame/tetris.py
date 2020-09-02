@@ -227,9 +227,12 @@ game = Tetris(int(gamesize[0]),int(gamesize[1]))
 size = (int(1.5*game.zoom*(gamesize[1])), int(1.5*game.zoom*(gamesize[0])))
 screen = pygame.display.set_mode(size, pygame.RESIZABLE)
 
-game.x, game.y = int(screen.get_size()[0]*0.25 - game.zoom*2), int(screen.get_size()[1]*0.25 - game.zoom*2) 
-     #use to center board
+game.x = int(int(event.w)*0.5 - game.zoom*game.width/2)
+game.y = int(int(event.h)*0.5 - game.zoom*game.height/2)
+#center board
+
 pygame.display.set_caption("Tetris")
+
 # Loop until the user clicks the close button.
 done = False
 clock = pygame.time.Clock()
@@ -313,19 +316,26 @@ while not done:
                     history.append(game.score)
                     
           if event.type == pygame.VIDEORESIZE:
-               game.x = int(event.w/4)
-               game.y = int(event.h/8)
+               game.x = int(int(event.w)*0.5 - game.zoom*game.width/2) 
+               game.y = int(int(event.h)*0.5 - game.zoom*game.height/2) 
+               
                screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                screen.fill(WHITE)
-               text_pause = Text("Press P to play", game.x+game.width*game.zoom/2, \
-                    game.y+ game.height*game.zoom/2, (255,0,0), 'Calibri', 65)
-               text_quit = Text("Press Q to quit", game.x+ game.width*game.zoom - 3*game.zoom,\
-                    game.y-10, BLACK, 'Calibri', 25)
-               text_game_over = Text("Game Over", game.x+game.width*game.zoom/2, \
-                    game.y+ game.height*game.zoom/2, (255,125,0), 'Calibri', 65)
-               text_restart = Text("Press R to restart", game.x + game.width*game.zoom/2, \
-                    game.y + game.height*game.zoom + game.zoom, (255,20,0), 'Calibri', 25)
-
+               text_pause = Text("Press P to play", int(game.x+game.width*game.zoom/2), \
+                         int(game.y+ game.height*game.zoom/2), (255,0,0), 'Calibri', 65)
+               text_quit = Text("Press Q to quit", int(game.x+ game.width*game.zoom - 3*game.zoom),\
+                         int(game.y-10), BLACK, 'Calibri', 25)
+               text_game_over = Text("Game Over", int(game.x+game.width*game.zoom/2), \
+                         int(game.y+ game.height*game.zoom/2), BLACK, 'Calibri', 65)
+               text_addscore = Text("Press Y to save your score", game.x+game.width*game.zoom/2, \
+                         int(game.y+ game.height*game.zoom/1.75), BLACK, 'Calibri', 35)
+               text_restart = Text("Press R to restart", int(game.x + game.width*game.zoom/2), \
+                         int(game.y + game.height*game.zoom + game.zoom), (255,20,0), 'Calibri', 25)
+               text_next = Text(("Next shape: "), int(game.x - 50), int(game.y*2 + 10) , \
+                         BLACK, 'Calibri', 20)
+               text_high_score = Text("High Score: " + history.highscore(), \
+                         int(game.x +game.width*game.zoom/2), \
+                         int(game.y - 10), (255, 125, 125), 'Calibri', 25)
 
                
 
