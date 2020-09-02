@@ -227,12 +227,13 @@ game = Tetris(int(gamesize[0]),int(gamesize[1]))
 size = (int(1.5*game.zoom*(gamesize[1])), int(1.5*game.zoom*(gamesize[0])))
 screen = pygame.display.set_mode(size, pygame.RESIZABLE)
 
-game.x = int(int(event.w)*0.5 - game.zoom*game.width/2)
-game.y = int(int(event.h)*0.5 - game.zoom*game.height/2)
+game.x = int(int(screen.get_size()[0])*0.5 - game.zoom*game.width/2)
+game.y = int(int(screen.get_size()[1])*0.5 - game.zoom*game.height/2)
 #center board
+icon = pygame.image.load("tetris.jpeg")
 
 pygame.display.set_caption("Tetris")
-
+pygame.display.set_icon(icon)
 # Loop until the user clicks the close button.
 done = False
 clock = pygame.time.Clock()
