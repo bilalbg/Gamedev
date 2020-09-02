@@ -1,18 +1,11 @@
 #Edited from 
 #https://levelup.gitconnected.com/writing-tetris-in-python-2a16bddb5318
 
+     
 import pygame
 import random
-
-figurestoshape = [
-     "l",
-     "⅃",
-      "L",
-      "T",
-     "□",
-      "Z",
-      "s"
-]
+import datetime
+import os.path
 
 colors = [
     (0, 0, 0),
@@ -58,38 +51,52 @@ class Tetris:
      x = 100 #not working
      y = 60
      zoom = 20
-     figure = None
+     #figure = None
+     figure = [None, None]
      
      def __init__(self, height, width):
           self.height = height
           self.width = width
-          for i in range(height):
+          self.reset()
+          
+     def reset(self):
+          self.state = "pause"
+          self.score = 0
+          
+          self.field = []
+          for i in range(self.height):
                new_line = []
-               for j in range(width):
+               for j in range(self.width):
                     new_line.append(0)
                self.field.append(new_line)
-            
+          self.figure = [None, None]
+          self.new_figure()
+          
      def new_figure(self):
-          self.figure = Figure(round(self.width/2)-2, 0)
-        
+          if self.figure[0]  == None:               
+               self.figure[0] = (Figure(round(self.width/2)-2, 0))
+          self.figure[1] = (Figure(round(self.width/2)-2, 0))
+          
      def intersects(self):
           intersection = False
           for i in range(4):
                for j in range(4):
-                    if i * 4 + j in self.figure.image():
-                         if i + self.figure.y > self.height - 1 or \
-                              j + self.figure.x > self.width - 1 or \
-                              j + self.figure.x < 0 or \
-                              self.field[i + self.figure.y][j + self.figure.x] > 0:
+                    if i * 4 + j in self.figure[0].image():
+                         if i + self.figure[0].y > self.height - 1 or \
+                              j + self.figure[0].x > self.width - 1 or \
+                              j + self.figure[0].x < 0 or \
+                              self.field[i + self.figure[0].y][j + self.figure[0].x] > 0:
                               intersection = True
           return intersection
         
+     #stopping object when it hits the ground
      def freeze(self):
           for i in range(4):
                for j in range(4):
-                    if i * 4 + j in self.figure.image():
-                         self.field[i + self.figure.y][j + self.figure.x] = self.figure.color
+                    if i * 4 + j in self.figure[0].image():
+                         self.field[i + self.figure[0].y][j + self.figure[0].x] = self.figure[0].color
           self.break_lines()
+          self.figure[0] = self.figure[1]
           self.new_figure()
           if self.intersects():
                game.state = "gameover"
@@ -111,31 +118,31 @@ class Tetris:
      def go_space(self):
           if  self.state != "pause":
                while not self.intersects():
-                    self.figure.y += 1
-               self.figure.y -= 1
+                    self.figure[0].y += 1
+               self.figure[0].y -= 1
                self.freeze()
 
      def go_down(self):
           if self.state != "pause":
-               self.figure.y += 1
+               self.figure[0].y += 1
           if self.intersects():
-               self.figure.y -= 1
+               self.figure[0].y -= 1
                self.freeze()
 
      def go_side(self, dx):
           if  self.state != "pause":
-               old_x = self.figure.x
-               self.figure.x += dx
+               old_x = self.figure[0].x
+               self.figure[0].x += dx
           if self.intersects():
-               self.figure.x = old_x
+               self.figure[0].x = old_x
 
      def rotate(self):
         
           if  self.state != "pause":
-               old_rotation = self.figure.rotation
-               self.figure.rotate()
+               old_rotation = self.figure[0].rotation
+               self.figure[0].rotate()
           if self.intersects():
-               self.figure.rotation = old_rotation
+               self.figure[0].rotation = old_rotation
 
 class Text:
     #centering text
@@ -153,17 +160,48 @@ class Text:
         
         coords = (drawX, drawY)
         screen.blit(self.txt, coords)
-        
-        
-               
-# font = pygame.font.SysFont('Calibri', 25, True, False)
-# text_quit = font.render("Press Q to quit", True, BLACK)
-# font1 = pygame.font.SysFont('Calibri', 65, True, False)
-# text_pause = font1.render("Press P to play", True, (255, 0, 0))
 
+class Scores:
      
-     
-     
+     maxscore = 0
+     def __init__(self, filename):
+          self.file = filename
+          if not os.path.exists(self.file):
+               self.scorehistory = open(self.file, "w+")
+               self.scorehistory.close()
+          else:
+               self.scorehistory = open(self.file, "r",  encoding="utf-8")
+               #self.scorehistory.close()
+          
+     def append(self, score):
+          if self.scorehistory.mode != 'a':
+               self.scorehistory.close()
+               self.scorehistory = open(self.file, "a+", encoding="utf-8")
+          self.scorehistory.write(str(score) + " " +\
+                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n")
+          
+          self.scorehistory.close()
+     def highscore(self):
+          scorelist = []
+          if self.scorehistory.readable():
+               self.scorehistory = open(self.file, "r",  encoding="utf-8")
+          for line in self.scorehistory:
+               scorelist.append(line)
+          if len(scorelist ) == 0:
+               return("None")
+          else:
+               
+               for scores in scorelist:
+                    if self.maxscore < int(scores.split(" ")[0]):
+                        self.maxscore = int(scores.split(" ")[0])
+                    
+                    print(self.maxscore)
+                    
+                    
+               return(str(self.maxscore))
+     def close(self):
+          self.scorehistory.close()
+
 
 # Initialize the game engine
 pygame.init()
@@ -173,13 +211,17 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
 
+history = Scores("Scores.txt")
+
+
+
 
 fps = 30
 gamesize = []
 while len(gamesize) < 2 or (gamesize[0] and gamesize[1] <= 8):
      gamesize.clear()
-     gamesize.append(int(input("Input game board height:")))
-     gamesize.append(int(input("Input game board width:")))
+     gamesize.append(int(input("Input game board height(> 8):")))
+     gamesize.append(int(input("Input game board width(> 8):")))
 
 game = Tetris(int(gamesize[0]),int(gamesize[1]))
 
@@ -194,16 +236,20 @@ done = False
 clock = pygame.time.Clock()
 
 
-text_pause = Text("Press P to play", screen.get_size()[0]*0.55, \
-          screen.get_size()[1]*0.5, (255,0,0), 'Calibri', 65)
-text_quit = Text("Press Q to quit", int(4*game.x),game.y-10, BLACK,\
-          'Calibri', 25)
-text_game_over = Text("Game Over", screen.get_size()[0]*0.5, \
-        screen.get_size()[1]*0.5, (255,125,0), 'Calibri', 65)
-text_game_over1 = Text("Press R to replay", screen.get_size()[0]*0.52, \
-        screen.get_size()[1]*0.6, (255,20,0), 'Calibri', 65)
-
-
+text_pause = Text("Press P to play", game.x+game.width*game.zoom/2, \
+        game.y+ game.height*game.zoom/2, (255,0,0), 'Calibri', 65)
+text_quit = Text("Press Q to quit", game.x+ game.width*game.zoom - 3*game.zoom,\
+          game.y-10, BLACK, 'Calibri', 25)
+text_game_over = Text("Game Over", game.x+game.width*game.zoom/2, \
+        game.y+ game.height*game.zoom/2, (255,125,0), 'Calibri', 65)
+text_restart = Text("Press R to restart", game.x + game.width*game.zoom/2, \
+        game.y + game.height*game.zoom + game.zoom, (255,20,0), 'Calibri', 25)
+text_next = Text(("Next shape: "), game.x - 50, game.y*2 + 10 , \
+     BLACK, 'Calibri', 20)
+text_high_score = Text("High Score: " + history.highscore(), \
+          game.x +game.width*game.zoom/2, \
+          game.y - 10, (255, 125, 125), 'Calibri', 25)
+game.new_figure()
 
 counter = 0
 pressing_down = False
@@ -211,7 +257,8 @@ pressing_left = False
 pressing_right = False
 
 while not done:
-     if game.figure is None:
+     #if game.figure is None:
+     if len(game.figure) <1:
         game.new_figure()
      counter += 1
      if counter > 100000:
@@ -223,10 +270,10 @@ while not done:
                game.go_down()
      if pressing_left:
           game.go_side(-1)
-          pygame.time.delay(50)
+          pygame.time.delay(75)
      if pressing_right:
           game.go_side(1)
-          pygame.time.delay(50)
+          pygame.time.delay(75)
 
      for event in pygame.event.get():
           if event.type == pygame.QUIT:
@@ -256,22 +303,27 @@ while not done:
                if event.key == pygame.K_q:
                     done = True
                if event.key == pygame.K_r :
-                    game.__init__(int(gamesize[1]), int(gamesize[0]))
+                    game.__init__(int(gamesize[0]), int(gamesize[1]))
+                    
+                    #screen = pygame.display.set_mode(size, pygame.RESIZABLE)
+                    game.state = "pause"
+                    
+               if event.key == pygame.K_y and game.state == "gameover":
+                    history.append(game.score)
+                    
           if event.type == pygame.VIDEORESIZE:
                game.x = int(event.w/4)
                game.y = int(event.h/8)
                screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                screen.fill(WHITE)
-               text_pause = Text("Press P to play", screen.get_size()[0]*0.55, \
-                         screen.get_size()[1]*0.5, (255,0,0), 'Calibri', 65)
-               text_quit = Text("Press Q to quit", int(4*game.x),game.y-10, BLACK,\
-                         'Calibri', 25)
-               text_score = Text(("Score: " + str(game.score)), game.x+30, game.y-10, \
-                         BLACK ,'Calibri', 25)
-               text_game_over = Text("Game Over", screen.get_size()[0]*0.27, \
-                    screen.get_size()[1]*0.5, (255,125,0), 'Calibri', 20)
-               text_game_over1 = Text("Press ESC to replay", screen.get_size()[0]*0.27, \
-                    screen.get_size()[1]*0.5, (255,215,0), 'Calibri', 20)
+               text_pause = Text("Press P to play", game.x+game.width*game.zoom/2, \
+                    game.y+ game.height*game.zoom/2, (255,0,0), 'Calibri', 65)
+               text_quit = Text("Press Q to quit", game.x+ game.width*game.zoom - 3*game.zoom,\
+                    game.y-10, BLACK, 'Calibri', 25)
+               text_game_over = Text("Game Over", game.x+game.width*game.zoom/2, \
+                    game.y+ game.height*game.zoom/2, (255,125,0), 'Calibri', 65)
+               text_restart = Text("Press R to restart", game.x + game.width*game.zoom/2, \
+                    game.y + game.height*game.zoom + game.zoom, (255,20,0), 'Calibri', 25)
 
 
                
@@ -287,43 +339,58 @@ while not done:
      screen.fill(WHITE)
      for i in range(game.height):
           for j in range(game.width):
-               pygame.draw.rect(screen, GRAY, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
+               pygame.draw.rect(screen, BLACK, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
                if game.field[i][j] > 0:
                     pygame.draw.rect(screen, colors[game.field[i][j]],
                                    [game.x + game.zoom * j + 1, game.y + game.zoom * i + 1, game.zoom - 2, game.zoom - 1])
 
-     if game.figure is not None and game.state != "gameover":
+     if game.figure[0] is not None and game.state != "gameover":
           for i in range(4):
                for j in range(4):
                     p = i * 4 + j
-                    if p in game.figure.image():
-                         pygame.draw.rect(screen, colors[game.figure.color],
-                                        [game.x + game.zoom * (j + game.figure.x) + 1,
-                                        game.y + game.zoom * (i + game.figure.y) + 1,
+                    if p in game.figure[0].image():
+                         pygame.draw.rect(screen, colors[game.figure[0].color],
+                                        [game.x + game.zoom * (j + game.figure[0].x) + 1,
+                                        game.y + game.zoom * (i + game.figure[0].y) + 1,
                                         game.zoom - 2, game.zoom - 2])
-                                        
-     #print(game.figure.figures[game.figure.type])
+     
      
      if(game.state == "pause"):
           text_pause.Draw(screen)
      
-     text_next = Text(("Next shape: "), screen.get_size()[0]/2, game.y -40, \
-          BLACK, 'Calibri', 20)
-     text_next_object = Text(figurestoshape[game.figure.type], screen.get_size()[0]/2, game.y -25, \
-          BLACK, 'Calibri', 35)
-     text_next.Draw(screen)
-     text_next_object.Draw(screen)
-     #print(game.figure.type)
      
-     text_score = Text(("Score: " + str(game.score)), game.x+30, game.y-10, \
-          BLACK ,'Calibri', 25)
+          
+     text_next.Draw(screen)
+     
+     for i in range(5):
+          for j in range(4):
+               p = i * 4 + j
+               
+               # pygame.draw.rect(screen, BLACK, [(game.x + game.width*game.zoom/2) - (game.zoom * (i-1)), \
+               #           game.y - (game.zoom * (j+1) ) , game.zoom, game.zoom], 1)
+               if p in game.figure[1].image():
+                    pygame.draw.rect(screen, colors[game.figure[1].color],
+                                   [game.x - game.width*game.zoom*0.6 + game.zoom * (j + game.figure[1].x),
+                                   game.y + game.height*game.zoom*0.35 + game.zoom * (i + game.figure[1].y+1),
+                                   game.zoom - 2, game.zoom - 2])
+                   # pygame.draw.rect(scree, BLACK)
+     
+     
+     text_score = Text(("Score: " + str(game.score)), game.x + game.zoom/2 + 2*game.zoom,\
+           game.y - game.zoom/2, BLACK ,'Calibri', 25)
      text_score.Draw(screen)
+     if(game.score > history.maxscore):
+          text_high_score = Text("High Score: " + str(game.score), \
+          game.x +game.width*game.zoom/2, \
+          game.y - 10, (255, 175, 175), 'Calibri', 25)
+          
+          
      text_quit.Draw(screen)
+     text_restart.Draw(screen)
+     text_high_score.Draw(screen)
 
      if game.state == "gameover":
           text_game_over.Draw(screen)
-          text_game_over1.Draw(screen)
-          
           
      pygame.display.flip()
      clock.tick(fps)
