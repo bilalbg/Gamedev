@@ -168,8 +168,6 @@ class Scores:
           self.file = filename
           if not os.path.exists(self.file):
                self.scorehistory = open(self.file, "w+")
-               self.scorehistory.close()
-               self.scorehistory = open(self.file, "r",  encoding="utf-8")
           else:
                self.scorehistory = open(self.file, "r",  encoding="utf-8")
                #self.scorehistory.close()
