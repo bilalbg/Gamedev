@@ -168,7 +168,6 @@ class Scores:
           self.file = filename
           if not os.path.exists(self.file):
                self.scorehistory = open(self.file, "w+")
-               self.scorehistory.close()
           else:
                self.scorehistory = open(self.file, "r",  encoding="utf-8")
                #self.scorehistory.close()
@@ -241,7 +240,9 @@ text_pause = Text("Press P to play", game.x+game.width*game.zoom/2, \
 text_quit = Text("Press Q to quit", game.x+ game.width*game.zoom - 3*game.zoom,\
           game.y-10, BLACK, 'Calibri', 25)
 text_game_over = Text("Game Over", game.x+game.width*game.zoom/2, \
-        game.y+ game.height*game.zoom/2, (255,125,0), 'Calibri', 65)
+        game.y+ game.height*game.zoom/2, BLACK, 'Calibri', 65)
+text_addscore = Text("Press Y to save your score", game.x+game.width*game.zoom/2, \
+        game.y+ game.height*game.zoom/1.75, BLACK, 'Calibri', 35)
 text_restart = Text("Press R to restart", game.x + game.width*game.zoom/2, \
         game.y + game.height*game.zoom + game.zoom, (255,20,0), 'Calibri', 25)
 text_next = Text(("Next shape: "), game.x - 50, game.y*2 + 10 , \
@@ -366,14 +367,11 @@ while not done:
           for j in range(4):
                p = i * 4 + j
                
-               # pygame.draw.rect(screen, BLACK, [(game.x + game.width*game.zoom/2) - (game.zoom * (i-1)), \
-               #           game.y - (game.zoom * (j+1) ) , game.zoom, game.zoom], 1)
                if p in game.figure[1].image():
                     pygame.draw.rect(screen, colors[game.figure[1].color],
                                    [game.x - game.width*game.zoom*0.6 + game.zoom * (j + game.figure[1].x),
                                    game.y + game.height*game.zoom*0.35 + game.zoom * (i + game.figure[1].y+1),
                                    game.zoom - 2, game.zoom - 2])
-                   # pygame.draw.rect(scree, BLACK)
      
      
      text_score = Text(("Score: " + str(game.score)), game.x + game.zoom/2 + 2*game.zoom,\
@@ -391,6 +389,7 @@ while not done:
 
      if game.state == "gameover":
           text_game_over.Draw(screen)
+          text_addscore.Draw(screen)
           
      pygame.display.flip()
      clock.tick(fps)
