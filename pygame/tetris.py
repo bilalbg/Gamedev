@@ -6,6 +6,8 @@ import pygame
 import random
 import datetime
 import os.path
+import os
+os.environ['SDL_AUDIODRIVER'] = 'dsp'
 
 colors = [
     (0, 0, 0),
@@ -143,6 +145,12 @@ class Tetris:
                self.figure[0].rotate()
           if self.intersects():
                self.figure[0].rotation = old_rotation
+     def resize(self, winsize):
+          if winsize[0] > self.zoom*self.width * 2 and winsize[1] > self.zoom*self.height*2:
+                    self.zoom = self.zoom * 1.5
+          
+          if winsize[0] < self.zoom*self.width *2 and winsize[1] < self.zoom*self.height*2:
+                    self.zoom = self.zoom / 1.5
 
 class Text:
     #centering text
@@ -194,8 +202,6 @@ class Scores:
                     if self.maxscore < int(scores.split(" ")[0]):
                         self.maxscore = int(scores.split(" ")[0])
                     
-                    print(self.maxscore)
-                    
                     
                return(str(self.maxscore))
      def close(self):
@@ -240,20 +246,20 @@ clock = pygame.time.Clock()
 
 
 text_pause = Text("Press P to play", game.x+game.width*game.zoom/2, \
-        game.y+ game.height*game.zoom/2, (255,0,0), 'Calibri', 65)
+        game.y+ game.height*game.zoom/2, (255,0,0), 'Calibri', int(3.5*game.zoom))
 text_quit = Text("Press Q to quit", game.x+ game.width*game.zoom - 3*game.zoom,\
-          game.y-10, BLACK, 'Calibri', 25)
+          game.y-10, BLACK, 'Calibri', int(1.2*game.zoom))
 text_game_over = Text("Game Over", game.x+game.width*game.zoom/2, \
-        game.y+ game.height*game.zoom/2, BLACK, 'Calibri', 65)
+        game.y+ game.height*game.zoom/2, BLACK, 'Calibri',  int(3.5*game.zoom))
 text_addscore = Text("Press Y to save your score", game.x+game.width*game.zoom/2, \
-        game.y+ game.height*game.zoom/1.75, BLACK, 'Calibri', 35)
+        game.y+ game.height*game.zoom/1.75, BLACK, 'Calibri',  int(1.5*game.zoom))
 text_restart = Text("Press R to restart", game.x + game.width*game.zoom/2, \
-        game.y + game.height*game.zoom + game.zoom, (255,20,0), 'Calibri', 25)
+        game.y + game.height*game.zoom + game.zoom, (255,20,0), 'Calibri', int(1.2*game.zoom))
 text_next = Text(("Next shape: "), game.x - 50, game.y*2 + 10 , \
-     BLACK, 'Calibri', 20)
+                                   BLACK, 'Calibri',  int(game.zoom))
 text_high_score = Text("High Score: " + history.highscore(), \
           game.x +game.width*game.zoom/2, \
-          game.y - 10, (255, 125, 125), 'Calibri', 25)
+          game.y - 10, (255, 125, 125), 'Calibri', int(1.2*game.zoom))
 game.new_figure()
 
 counter = 0
@@ -295,16 +301,21 @@ while not done:
                     game.rotate()
                if event.key == pygame.K_DOWN:
                     pressing_down = True
-               if event.key == pygame.K_LEFT and not pressing_right:
+               if event.key == pygame.K_LEFT:
                     pressing_left = True
+                    pressing_right = False
                     pygame.time.delay(100)
                     #game.go_side(-1)
-               if event.key == pygame.K_RIGHT and not pressing_left:
+               if event.key == pygame.K_RIGHT:
                     pressing_right = True
+                    pressing_left = False
                     pygame.time.delay(100)
                     #game.go_side(1)
                if event.key == pygame.K_SPACE and game.state == "start":
                     game.go_space()
+                    pressing_left=False
+                    pressing_right = False
+                    pressing_down = False
                if event.key == pygame.K_q:
                     done = True
                if event.key == pygame.K_r :
@@ -319,25 +330,25 @@ while not done:
           if event.type == pygame.VIDEORESIZE:
                game.x = int(int(event.w)*0.5 - game.zoom*game.width/2) 
                game.y = int(int(event.h)*0.5 - game.zoom*game.height/2) 
-               
+               game.resize((event.w,event.h))
                screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                screen.fill(WHITE)
-               text_pause = Text("Press P to play", int(game.x+game.width*game.zoom/2), \
-                         int(game.y+ game.height*game.zoom/2), (255,0,0), 'Calibri', 65)
-               text_quit = Text("Press Q to quit", int(game.x+ game.width*game.zoom - 3*game.zoom),\
-                         int(game.y-10), BLACK, 'Calibri', 25)
-               text_game_over = Text("Game Over", int(game.x+game.width*game.zoom/2), \
-                         int(game.y+ game.height*game.zoom/2), BLACK, 'Calibri', 65)
+               
+               text_pause = Text("Press P to play", game.x+game.width*game.zoom/2, \
+                    game.y+ game.height*game.zoom/2, (255,0,0), 'Calibri', int(3.5*game.zoom))
+               text_quit = Text("Press Q to quit", game.x+ game.width*game.zoom - 3*game.zoom,\
+                         game.y-10, BLACK, 'Calibri', int(1.2*game.zoom))
+               text_game_over = Text("Game Over", game.x+game.width*game.zoom/2, \
+                    game.y+ game.height*game.zoom/2, BLACK, 'Calibri',  int(3.5*game.zoom))
                text_addscore = Text("Press Y to save your score", game.x+game.width*game.zoom/2, \
-                         int(game.y+ game.height*game.zoom/1.75), BLACK, 'Calibri', 35)
-               text_restart = Text("Press R to restart", int(game.x + game.width*game.zoom/2), \
-                         int(game.y + game.height*game.zoom + game.zoom), (255,20,0), 'Calibri', 25)
-               text_next = Text(("Next shape: "), int(game.x - 50), int(game.y*2 + 10) , \
-                         BLACK, 'Calibri', 20)
+                    game.y+ game.height*game.zoom/1.75, BLACK, 'Calibri',  int(1.5*game.zoom))
+               text_restart = Text("Press R to restart", game.x + game.width*game.zoom/2, \
+                    game.y + game.height*game.zoom + game.zoom, (255,20,0), 'Calibri', int(1.2*game.zoom))
+               text_next = Text(("Next shape: "), game.x - 50, game.y*2 + 10 , \
+                                                  BLACK, 'Calibri',  int(game.zoom))
                text_high_score = Text("High Score: " + history.highscore(), \
-                         int(game.x +game.width*game.zoom/2), \
-                         int(game.y - 10), (255, 125, 125), 'Calibri', 25)
-
+                         game.x +game.width*game.zoom/2, \
+                         game.y - 10, (255, 125, 125), 'Calibri', int(1.2*game.zoom))
                
 
      if event.type == pygame.KEYUP:
@@ -402,7 +413,7 @@ while not done:
           text_game_over.Draw(screen)
           text_addscore.Draw(screen)
           
-     pygame.display.flip()
+     pygame.display.update()
      clock.tick(fps)
 
 pygame.quit()
